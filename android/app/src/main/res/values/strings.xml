@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="account_type">phaselab.login</string>
+	<string name="app_name"><b>ForceRNTest</b></string>
+	<string name="app_package">phaselab</string>
+</resources>
