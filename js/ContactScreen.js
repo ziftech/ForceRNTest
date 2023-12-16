@@ -32,7 +32,7 @@ import {
     View,
     TouchableHighlight,
     Text,
-    Image
+    Image  // Make sure to import Image
 } from 'react-native';
 
 import styles from './Styles';
@@ -41,17 +41,20 @@ import Field from './Field';
 import storeMgr from './StoreMgr';
 import { Card, Button } from 'react-native-elements';
 
-// State: contact
-// Props: contact
 class ContactScreen extends React.Component {
     constructor(props) {
         super(props);
-        this.state = { contact: props.route.params.contact || {} };
+        this.state = {
+            contact: props.route.params.contact || {},
+            imageLoadStart: null,
+            imageLoadDuration: null
+        };
         this.onBack = this.onBack.bind(this);
         this.onSave = this.onSave.bind(this);
         this.onChange = this.onChange.bind(this);
         this.onDeleteUndeleteContact = this.onDeleteUndeleteContact.bind(this);
-        
+        this.onImageLoadStart = this.onImageLoadStart.bind(this);
+        this.onImageLoadEnd = this.onImageLoadEnd.bind(this);
     }
 
     componentDidMount() {
@@ -62,20 +65,29 @@ class ContactScreen extends React.Component {
         
         this.props.navigation.setOptions({
             title: 'Contact',
-            headerLeft: () => (<NavImgButton icon='arrow-back' color='white' onPress={() => this.onBack()} />),
+            headerLeft: () => (<NavImgButton icon='arrow-back' color='white' onPress={this.onBack} />),
             headerRight: () => (
-                    <View style={styles.navButtonsGroup}>
-                        <NavImgButton icon={deleteUndeleteIconName} iconType='material-community' onPress={() => this.onDeleteUndeleteContact()} />
-                    </View>
+                <View style={styles.navButtonsGroup}>
+                    <NavImgButton icon={deleteUndeleteIconName} iconType='material-community' onPress={this.onDeleteUndeleteContact} />
+                </View>
             )
         });
     }
-    
+
+    onImageLoadStart() {
+        this.setState({ imageLoadStart: new Date().getTime() });
+    }
+
+    onImageLoadEnd() {
+        const loadEnd = new Date().getTime();
+        const loadDuration = loadEnd - this.state.imageLoadStart;
+        this.setState({ imageLoadDuration: loadDuration });
+    }
+
     onBack() {
         const contact = this.state.contact;
         const navigation = this.props.navigation;
         if (contact.__locally_created__ && !contact.__locally_modified__) {
-            // Nothing typed in - delete
             storeMgr.deleteContact(contact, () => navigation.pop());
         }
         else {
@@ -94,7 +106,7 @@ class ContactScreen extends React.Component {
     onChange(fieldKey, fieldValue) {
         const contact = this.state.contact;
         contact[fieldKey] = fieldValue;
-        this.setState({contact});
+        this.setState({ contact });
     }
 
     onDeleteUndeleteContact() {
@@ -102,7 +114,7 @@ class ContactScreen extends React.Component {
         const navigation = this.props.navigation;
         contact.__locally_deleted__ = !contact.__locally_deleted__;
         contact.__local__ = contact.__locally_deleted__ || contact.__locally_updated__ || contact.__locally_created__;
-        storeMgr.saveContact(contact, () => {navigation.pop()});
+        storeMgr.saveContact(contact, () => { navigation.pop() });
     }
 
     renderErrorIfAny() {
@@ -124,58 +136,72 @@ class ContactScreen extends React.Component {
         if (errorMessage == null) {
             return null;
         } else {
-
             return (
-                    <View style={{marginTop:10}}>
+                <View style={{marginTop:10}}>
                     <Button
-                      icon={{name: 'error', size: 15, color: 'white'}}
-                      title={errorMessage}
-                      buttonStyle={{backgroundColor:'red'}}
+                        icon={{name: 'error', size: 15, color: 'white'}}
+                        title={errorMessage}
+                        buttonStyle={{backgroundColor:'red'}}
                     />
-                    </View>
+                </View>
             );
         }
     }
 
     renderSaveButton() {
         return (
-                <View style={{marginTop:10}}>
+            <View style={{marginTop:10}}>
                 <Button
-                  backgroundColor='blue'
-                  containerStyle={{alignItems:'stretch'}}
-                  icon={{name: 'save'}}
-                  title='Save'
-                  onPress={this.onSave}
+                    backgroundColor='blue'
+                    containerStyle={{alignItems:'stretch'}}
+                    icon={{name: 'save'}}
+                    title='Save'
+                    onPress={this.onSave}
                 />
-                </View>
+            </View>
         );
     }
-    
+
+    renderImageLoadTime() {
+        if (this.state.imageLoadDuration) {
+            return (
+                <Text style={{ alignSelf: 'center', marginVertical: 10 }}>
+                    Image load time: {this.state.imageLoadDuration} ms
+                </Text>
+            );
+        }
+        return null;
+    }
+
     render() {
         return (
-                <ScrollView>
-                  <View style={this.props.style}>
+            <ScrollView>
+                <View style={this.props.style}>
                     {this.renderErrorIfAny()}
 
-                    {/* Render the Image */}
                     <Image 
-                    source={{
-                        uri: 'https://reactnative.dev/img/tiny_logo.png',
-                        }} 
-                    style={{ width: 200, height: 200, alignSelf: 'center' }} 
+                        source={{ uri: 'https://media.macphun.com/img/uploads/macphun/blog/2386/1_GlowEffectToAPicture.jpg?q=75&w=1710&h=906&resize=cover' }} 
+                        style={{ width: 200, height: 200, alignSelf: 'center' }}
+                        onLoadStart={this.onImageLoadStart}
+                        onLoad={this.onImageLoadEnd}
                     />
 
-                    <Field fieldLabel="First name" fieldValue={this.state.contact.FirstName} onChange={(text) => this.onChange("FirstName", text)}/>
-                    <Field fieldLabel="Last name" fieldValue={this.state.contact.LastName} onChange={(text) => this.onChange("LastName", text)}/>
-                    <Field fieldLabel="Title" fieldValue={this.state.contact.Title} onChange={(text) => this.onChange("Title", text)}/>
-                    <Field fieldLabel="Mobile phone" fieldValue={this.state.contact.MobilePhone} onChange={(text) => this.onChange("MobilePhone", text)}/>
-                    <Field fieldLabel="Email address" fieldValue={this.state.contact.Email} onChange={(text) => this.onChange("Email", text)}/>
-                    <Field fieldLabel="Department" fieldValue={this.state.contact.Department} onChange={(text) => this.onChange("Department", text)}/>
+                    {this.renderImageLoadTime()}
+
+                    <Field fieldLabel="First name" fieldValue={this.state.contact.FirstName} onChange={(text) => this.onChange("FirstName", text)} />
+                    {/* ... other fields */}
+                    <Field fieldLabel="Last name" fieldValue={this.state.contact.LastName} onChange={(text) => this.onChange("LastName", text)} />
+                    <Field fieldLabel="Title" fieldValue={this.state.contact.Title} onChange={(text) => this.onChange("Title", text)} />
+                    <Field fieldLabel="Phone" fieldValue={this.state.contact.Phone} onChange={(text) => this.onChange("Phone", text)} />
+                    <Field fieldLabel="Email" fieldValue={this.state.contact.Email} onChange={(text) => this.onChange("Email", text)} />
+
+
                     {this.renderSaveButton()}
-                  </View>
-                </ScrollView>
-               );
+                </View>
+            </ScrollView>
+        );
     }
 }
 
 export default ContactScreen;
+

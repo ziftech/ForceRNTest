@@ -54,10 +54,10 @@ class ContactBadge extends React.Component {
                 <View style={[styles.circle, {backgroundColor: color}]}>
                     {/* Added image */}
                     <Image source={{
-                        uri: 'https://reactnative.dev/img/tiny_logo.png',
+                        uri: 'https://picsum.photos/id/1/50/50',
                         }}
                         style={styles.tinyLogo} />
-                  <Text style={styles.initials}>{initials}</Text>
+                  {/* <Text style={styles.initials}>{initials}</Text> */}
                 </View>           
                );
     }
